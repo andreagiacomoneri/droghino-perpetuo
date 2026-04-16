@@ -1,0 +1,164 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo:wght@400;500&display=swap');
+
+:root {
+  --andre: #378ADD;
+  --andre-light: rgba(55, 138, 221, 0.12);
+  --andre-border: rgba(55, 138, 221, 0.3);
+  --cami: #EF9F27;
+  --cami-light: rgba(239, 159, 39, 0.12);
+  --cami-border: rgba(239, 159, 39, 0.3);
+  --bg: #111110;
+  --surface: #1C1C1A;
+  --surface2: #252522;
+  --border: rgba(255, 255, 255, 0.08);
+  --border2: rgba(255, 255, 255, 0.15);
+  --text: #F1EFE8;
+  --text-muted: #888780;
+  --text-dim: #5F5E5A;
+  --green: #639922;
+  --red: #E24B4A;
+  --radius: 12px;
+  --radius-sm: 8px;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html, body, #root {
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Archivo', sans-serif;
+  font-size: 16px;
+  overflow: hidden;
+}
+
+/* Scrollable containers */
+.scrollable {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.scrollable::-webkit-scrollbar { display: none; }
+
+/* Typography */
+.font-black { font-family: 'Archivo Black', sans-serif; }
+
+/* Shared card */
+.card {
+  background: var(--surface);
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+}
+
+.card-sm {
+  background: var(--surface);
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+}
+
+/* Pill toggle */
+.pill-track {
+  width: 40px;
+  height: 24px;
+  border-radius: 12px;
+  background: var(--surface2);
+  border: 0.5px solid var(--border2);
+  position: relative;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+  flex-shrink: 0;
+}
+.pill-track.on { background: var(--andre); border-color: var(--andre); }
+.pill-thumb {
+  position: absolute;
+  top: 4px; left: 4px;
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  background: #888780;
+  transition: left 0.2s, background 0.2s;
+}
+.pill-track.on .pill-thumb { left: 20px; background: white; }
+
+/* HtH bar */
+.hth-track {
+  height: 5px;
+  background: var(--bg);
+  border-radius: 3px;
+  overflow: hidden;
+  display: flex;
+  margin: 6px 0;
+}
+.hth-fill-andre { height: 100%; background: var(--andre); }
+.hth-fill-cami  { height: 100%; background: var(--cami); }
+
+/* Buttons */
+.btn-primary {
+  background: var(--text);
+  color: var(--bg);
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 14px;
+  font-family: 'Archivo Black', sans-serif;
+  font-size: 15px;
+  cursor: pointer;
+  width: 100%;
+  letter-spacing: -0.3px;
+  transition: opacity 0.15s;
+}
+.btn-primary:active { opacity: 0.8; }
+
+.btn-secondary {
+  background: var(--surface2);
+  color: var(--text);
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 13px;
+  font-family: 'Archivo', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  width: 100%;
+  transition: opacity 0.15s;
+}
+.btn-secondary:active { opacity: 0.8; }
+
+/* Tags */
+.caller-tag {
+  font-size: 11px;
+  font-weight: 500;
+  padding: 2px 7px;
+  border-radius: 4px;
+}
+.caller-tag.andre { background: rgba(55,138,221,0.15); color: var(--andre); }
+.caller-tag.cami  { background: rgba(239,159,39,0.15);  color: var(--cami);  }
+
+/* Pulse animation for live dot */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.3; }
+}
+.live-dot {
+  width: 8px; height: 8px;
+  background: var(--cami);
+  border-radius: 50%;
+  animation: pulse 1.5s infinite;
+  flex-shrink: 0;
+}
+
+/* Fade in */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.fade-in { animation: fadeIn 0.2s ease forwards; }
