@@ -5,16 +5,13 @@ function isDraw(m) {
   return !m.caller?.startsWith('empty_') && m.andre_final === 0 && m.cami_final === 0
 }
 
-function isAndreWin(m) {
-  if (m.caller === 'empty_andre') return true
-  if (m.caller === 'andre' && m.andre_final === 0 && !isDraw(m)) return true
-  return false
-}
-
-function isCamiWin(m) {
-  if (m.caller === 'empty_cami') return true
-  if (m.caller === 'cami' && m.cami_final === 0 && !isDraw(m)) return true
-  return false
+function matchWinner(m) {
+  if (isDraw(m)) return 'draw'
+  if (m.caller === 'empty_andre') return 'andre'
+  if (m.caller === 'empty_cami') return 'cami'
+  if (m.andre_final < m.cami_final) return 'andre'
+  if (m.cami_final < m.andre_final) return 'cami'
+  return 'draw'
 }
 
 export function useAllData() {
@@ -48,8 +45,9 @@ export function useAllData() {
   }
 
   const matchWins = {
-    andre: allMatches.filter(isAndreWin).length,
-    cami:  allMatches.filter(isCamiWin).length,
+    andre: allMatches.filter(m => matchWinner(m) === 'andre').length,
+    cami:  allMatches.filter(m => matchWinner(m) === 'cami').length,
+    draws: allMatches.filter(m => matchWinner(m) === 'draw').length,
   }
 
   function getMatchesForSession(sessionId) {
@@ -102,10 +100,10 @@ function computeStats(allMatches, completedSessions) {
     let longestStreak = 0, tempStreak = 0
     for (const m of allMatches) {
       if (isDraw(m)) continue
-      if (m.caller === p && m[`${p}_final`] === 0) {
+      if (matchWinner(m) === p) {
         tempStreak++
         longestStreak = Math.max(longestStreak, tempStreak)
-      } else if (m.caller === p) {
+      } else {
         tempStreak = 0
       }
     }
@@ -114,8 +112,8 @@ function computeStats(allMatches, completedSessions) {
     for (let i = allMatches.length - 1; i >= 0; i--) {
       const m = allMatches[i]
       if (isDraw(m)) continue
-      if (m.caller === p && m[`${p}_final`] === 0) currentStreak++
-      else if (m.caller === p) break
+      if (matchWinner(m) === p) currentStreak++
+      else break
     }
 
     let longestSessionStreak = 0, currentSessionStreak = 0, tempSStreak = 0
@@ -128,13 +126,8 @@ function computeStats(allMatches, completedSessions) {
       else break
     }
 
-    const nonCallerScores = allMatches
-      .filter(m => m.caller !== p && !m.caller?.startsWith('empty_'))
-      .map(m => m[`${p}_final`])
-    const callerLossScores = allMatches
-      .filter(m => m.caller === p && m[`${p}_final`] > 0)
-      .map(m => m[`${p}_final`])
-    const worstMatch = Math.max(...[...nonCallerScores, ...callerLossScores, 0])
+    const allFinalScores = allMatches.map(m => m[`${p}_final`])
+    const worstMatch = Math.max(...allFinalScores, 0)
 
     const avgPerMatch = allMatches.reduce((s, m) => s + m[`${p}_final`], 0) / total
 
@@ -160,6 +153,7 @@ function computeStats(allMatches, completedSessions) {
       avgPerMatch: Math.round(avgPerMatch * 10) / 10,
       avgPerSession: Math.round(avgPerSession),
       worstMatch,
+      matchWins: allMatches.filter(m => matchWinner(m) === p).length,
       sessionWins: completedSessions.filter(s => s.winner === p).length,
       sessionWinRate: completedSessions.length
         ? Math.round((completedSessions.filter(s => s.winner === p).length / completedSessions.length) * 100)
@@ -180,8 +174,9 @@ function computeStats(allMatches, completedSessions) {
     totalDraws,
     totalSessions: completedSessions.length,
     matchWins: {
-      andre: allMatches.filter(isAndreWin).length,
-      cami:  allMatches.filter(isCamiWin).length,
+      andre: allMatches.filter(m => matchWinner(m) === 'andre').length,
+      cami:  allMatches.filter(m => matchWinner(m) === 'cami').length,
+      draws: allMatches.filter(m => matchWinner(m) === 'draw').length,
     },
     sessionWins: {
       andre: completedSessions.filter(s => s.winner === 'andre').length,
