@@ -4,8 +4,8 @@
  * Winner gets 0. Loser gets raw + 10. Non-caller always gets their raw.
  */
 export function computeScores({ caller, andreRaw, camiRaw }) {
-  const callerWins =
-    caller === 'andre' ? andreRaw <= camiRaw : camiRaw <= andreRaw
+  const isDraw = andreRaw === camiRaw
+  if (isDraw) return { andreFinal: 0, camiFinal: 0, winner: null }
 
   if (caller === 'andre') {
     return {
