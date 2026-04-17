@@ -42,6 +42,7 @@ export function useAllData() {
   const sessionWins = {
     andre: completedSessions.filter(s => s.winner === 'andre').length,
     cami:  completedSessions.filter(s => s.winner === 'cami').length,
+    draws: completedSessions.filter(s => s.winner === null).length,
   }
 
   const matchWins = {
@@ -181,6 +182,7 @@ function computeStats(allMatches, completedSessions) {
     sessionWins: {
       andre: completedSessions.filter(s => s.winner === 'andre').length,
       cami:  completedSessions.filter(s => s.winner === 'cami').length,
+      draws: completedSessions.filter(s => s.winner === null).length,
     },
     bestStreak,
     worstLoss,
