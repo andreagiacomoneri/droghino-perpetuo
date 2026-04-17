@@ -38,11 +38,11 @@ export function useAllData() {
     return !m.caller?.startsWith('empty_') && m.andre_raw === m.cami_raw
   }
 
-  // Match wins: caller got 0 AND it wasn't a draw
+  // Match wins: player was the caller AND got 0 AND it wasn't a draw
   const matchWins = allMatches.reduce(
     (acc, m) => ({
-      andre: acc.andre + (m.andre_final === 0 && !isDraw(m) && m.caller !== 'cami' ? 1 : 0),
-      cami:  acc.cami  + (m.cami_final  === 0 && !isDraw(m) && m.caller !== 'andre' ? 1 : 0),
+      andre: acc.andre + (m.caller === 'andre' && m.andre_final === 0 && !isDraw(m) ? 1 : 0),
+      cami:  acc.cami  + (m.caller === 'cami'  && m.cami_final  === 0 && !isDraw(m) ? 1 : 0),
     }),
     { andre: 0, cami: 0 }
   )
@@ -178,10 +178,10 @@ function computeStats(allMatches, completedSessions) {
     ? { player: 'andre', value: playerStats.andre.worstMatch }
     : { player: 'cami', value: playerStats.cami.worstMatch }
 
-  // Match wins excluding draws
+  // Match wins: player was the caller AND got 0 AND it wasn't a draw
   const matchWins = {
-    andre: allMatches.filter(m => m.andre_final === 0 && !isDraw(m) && m.caller !== 'cami').length,
-    cami:  allMatches.filter(m => m.cami_final  === 0 && !isDraw(m) && m.caller !== 'andre').length,
+    andre: allMatches.filter(m => m.caller === 'andre' && m.andre_final === 0 && !isDraw(m)).length,
+    cami:  allMatches.filter(m => m.caller === 'cami'  && m.cami_final  === 0 && !isDraw(m)).length,
   }
 
   return {
