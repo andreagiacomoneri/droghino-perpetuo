@@ -53,8 +53,8 @@ export default function History({ allData }) {
                     {sm.length} matches{session.target_score ? ` · target ${session.target_score}` : ''}
                   </div>
                 </div>
-                <div style={{ fontSize: 12, fontWeight: 500, color: session.winner === 'andre' ? 'var(--andre)' : 'var(--cami)' }}>
-                  {session.winner === 'andre' ? 'Andre' : 'Cami'} won
+                <div style={{ fontSize: 12, fontWeight: 500, color: session.winner === 'andre' ? 'var(--andre)' : session.winner === 'cami' ? 'var(--cami)' : 'var(--text-dim)' }}>
+                  {session.winner === 'andre' ? 'Andre won' : session.winner === 'cami' ? 'Cami won' : 'Draw'}
                 </div>
               </div>
 
