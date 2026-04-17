@@ -13,14 +13,16 @@ export function computeScores({ caller, andreRaw, camiRaw }) {
 
   if (caller === 'andre') {
     return {
-      andreFinal: callerWins ? 0 : andreRaw + 10,
+      // Caller wins with negative score: keeps the negative value instead of 0
+      andreFinal: callerWins ? (andreRaw < 0 ? andreRaw : 0) : andreRaw + 10,
       camiFinal: camiRaw,
       winner: callerWins ? 'andre' : null,
     }
   } else {
     return {
       andreFinal: andreRaw,
-      camiFinal: callerWins ? 0 : camiRaw + 10,
+      // Caller wins with negative score: keeps the negative value instead of 0
+      camiFinal: callerWins ? (camiRaw < 0 ? camiRaw : 0) : camiRaw + 10,
       winner: callerWins ? 'cami' : null,
     }
   }
