@@ -23,13 +23,35 @@ export function computeScores({ caller, andreRaw, camiRaw }) {
 }
 
 /**
+ * Compute final scores for an empty hand match.
+ * The player who emptied their hand gets -10.
+ * The opponent gets their raw card value.
+ * No call/knock involved â€” emptying hand ends the match automatically.
+ */
+export function computeEmptyHandScores({ emptyPlayer, andreRaw, camiRaw }) {
+  if (emptyPlayer === 'andre') {
+    return {
+      andreFinal: -10,
+      camiFinal: camiRaw,
+      winner: 'andre', // going out is always good for you
+    }
+  } else {
+    return {
+      andreFinal: andreRaw,
+      camiFinal: -10,
+      winner: 'cami',
+    }
+  }
+}
+
+/**
  * Determine session winner from an array of matches.
  * Player with lowest sum of final scores in this session wins.
  */
 export function computeSessionWinner(matches) {
   const andreTotal = matches.reduce((s, m) => s + m.andre_final, 0)
   const camiTotal  = matches.reduce((s, m) => s + m.cami_final, 0)
-  if (andreTotal === camiTotal) return null // tie — shouldn't happen per rules but handled
+  if (andreTotal === camiTotal) return null // tie â€” shouldn't happen per rules but handled
   return andreTotal < camiTotal ? 'andre' : 'cami'
 }
 
