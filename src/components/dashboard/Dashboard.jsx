@@ -72,7 +72,7 @@ export default function Dashboard({ sessionData, allData, onNavigate }) {
             </div>
           </div>
           <button style={{
-            fontSize: 12, fontWeight: 500, color: 'var(--cami-dark)', background: 'var(--cami)',
+            fontSize: 12, fontWeight: 500, background: 'var(--cami)',
             border: 'none', borderRadius: 6, padding: '6px 12px', cursor: 'pointer', fontFamily: 'Archivo, sans-serif',
             color: '#412402',
           }}>
