@@ -53,6 +53,7 @@ function GameStats({ stats }) {
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
         <StatCard label="Total matches" value={stats.totalMatches} />
         <StatCard label="Total sessions" value={stats.totalSessions} />
+        <StatCard label="Total draws" value={stats.totalDraws} />
       </div>
 
       <SectionTitle>Match wins</SectionTitle>
