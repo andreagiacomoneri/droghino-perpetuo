@@ -57,7 +57,7 @@ function GameStats({ stats }) {
       </div>
 
       <SectionTitle>Match wins</SectionTitle>
-      <HthBar andreVal={stats.matchWins.andre} camiVal={stats.matchWins.cami} />
+      <HthBar andreVal={stats.matchWins.andre} camiVal={stats.matchWins.cami} drawVal={stats.matchWins.draws} />
 
       <SectionTitle>Session wins</SectionTitle>
       <HthBar andreVal={stats.sessionWins.andre} camiVal={stats.sessionWins.cami} />
