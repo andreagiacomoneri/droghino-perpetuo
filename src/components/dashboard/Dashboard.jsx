@@ -100,8 +100,8 @@ export default function Dashboard({ sessionData, allData, onNavigate }) {
               <div style={{ fontSize: 13, fontWeight: 500 }}>
                 {new Date(lastSession.date).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}
               </div>
-              <div style={{ fontSize: 12, fontWeight: 500, color: lastSession.winner === 'andre' ? 'var(--andre)' : 'var(--cami)' }}>
-                {lastSession.winner === 'andre' ? 'Andre' : 'Cami'} won
+              <div style={{ fontSize: 12, fontWeight: 500, color: lastSession.winner === 'andre' ? 'var(--andre)' : lastSession.winner === 'cami' ? 'var(--cami)' : 'var(--text-dim)' }}>
+                {lastSession.winner === 'andre' ? 'Andre won' : lastSession.winner === 'cami' ? 'Cami won' : 'Draw'}
               </div>
             </div>
             <div style={{ display: 'flex', gap: 16 }}>
