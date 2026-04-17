@@ -20,7 +20,16 @@ export default function History({ allData }) {
           const sm = getMatchesForSession(session.id)
           const andreTotal = sm.reduce((s, m) => s + m.andre_final, 0)
           const camiTotal  = sm.reduce((s, m) => s + m.cami_final, 0)
-          const matchWins  = { andre: sm.filter(m => m.andre_final === 0).length, cami: sm.filter(m => m.cami_final === 0).length }
+          function isDraw(m) { return !m.caller?.startsWith('empty_') && m.andre_final === 0 && m.cami_final === 0 }
+          function mWinner(m) {
+            if (isDraw(m)) return 'draw'
+            if (m.caller === 'empty_andre') return 'andre'
+            if (m.caller === 'empty_cami') return 'cami'
+            if (m.andre_final < m.cami_final) return 'andre'
+            if (m.cami_final < m.andre_final) return 'cami'
+            return 'draw'
+          }
+          const matchWins = { andre: sm.filter(m => mWinner(m) === 'andre').length, cami: sm.filter(m => mWinner(m) === 'cami').length, draws: sm.filter(m => mWinner(m) === 'draw').length }
           const warStart   = getWarScoreAtSessionStart(session.id)
           const warEnd     = { andre: warStart.andre + andreTotal, cami: warStart.cami + camiTotal }
           const gapStart   = warStart.cami - warStart.andre // positive = andre ahead
@@ -66,7 +75,7 @@ export default function History({ allData }) {
                 <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 10 }} onClick={e => e.stopPropagation()}>
 
                   {/* Match wins */}
-                  <HthBar label="Match wins" andreVal={matchWins.andre} camiVal={matchWins.cami} />
+                  <HthBar label="Match wins" andreVal={matchWins.andre} camiVal={matchWins.cami} drawVal={matchWins.draws} />
 
                   {/* War gap */}
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
