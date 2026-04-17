@@ -1,14 +1,28 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 
+function isDraw(m) {
+  return !m.caller?.startsWith('empty_') && m.andre_final === 0 && m.cami_final === 0
+}
+
+function isAndreWin(m) {
+  if (m.caller === 'empty_andre') return true
+  if (m.caller === 'andre' && m.andre_final === 0 && !isDraw(m)) return true
+  return false
+}
+
+function isCamiWin(m) {
+  if (m.caller === 'empty_cami') return true
+  if (m.caller === 'cami' && m.cami_final === 0 && !isDraw(m)) return true
+  return false
+}
+
 export function useAllData() {
   const [sessions, setSessions] = useState([])
   const [allMatches, setAllMatches] = useState([])
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    fetchAll()
-  }, [])
+  useEffect(() => { fetchAll() }, [])
 
   async function fetchAll() {
     setLoading(true)
@@ -33,26 +47,10 @@ export function useAllData() {
     cami:  completedSessions.filter(s => s.winner === 'cami').length,
   }
 
-  // A draw: both finals are 0 AND not an empty hand match
-  // Detected from finals (not raws) so old data logged under previous rules stays correct
-  function isDraw(m) {
-    return !m.caller?.startsWith('empty_') && m.andre_final === 0 && m.cami_final === 0
+  const matchWins = {
+    andre: allMatches.filter(isAndreWin).length,
+    cami:  allMatches.filter(isCamiWin).length,
   }
-
-  // Match wins: call win (caller got 0, not a draw) OR empty hand (-10)
-  const matchWins = allMatches.reduce(
-    (acc, m) => ({
-      andre: acc.andre + (
-        (m.caller === 'andre' && m.andre_final === 0 && !isDraw(m)) ||
-        m.caller === 'empty_andre' ? 1 : 0
-      ),
-      cami: acc.cami + (
-        (m.caller === 'cami' && m.cami_final === 0 && !isDraw(m)) ||
-        m.caller === 'empty_cami' ? 1 : 0
-      ),
-    }),
-    { andre: 0, cami: 0 }
-  )
 
   function getMatchesForSession(sessionId) {
     return allMatches.filter(m => m.session_id === sessionId)
@@ -87,10 +85,6 @@ export function useAllData() {
   }
 }
 
-function isDraw(m) {
-  return !m.caller?.startsWith('empty_') && m.andre_final === 0 && m.cami_final === 0
-}
-
 function computeStats(allMatches, completedSessions) {
   const total = allMatches.length
   if (total === 0) return null
@@ -102,14 +96,12 @@ function computeStats(allMatches, completedSessions) {
 
   for (const p of players) {
     const calls = allMatches.filter(m => m.caller === p)
-    // A call win: caller got 0 and it wasn't a draw
     const callWins = calls.filter(m => m[`${p}_final`] === 0 && !isDraw(m))
     const penalties = calls.filter(m => m[`${p}_final`] > m[`${p}_raw`])
 
-    // Call win streak (draws don't count as wins or losses for streaks)
     let longestStreak = 0, tempStreak = 0
     for (const m of allMatches) {
-      if (isDraw(m)) continue // draws don't break or build streaks
+      if (isDraw(m)) continue
       if (m.caller === p && m[`${p}_final`] === 0) {
         tempStreak++
         longestStreak = Math.max(longestStreak, tempStreak)
@@ -118,7 +110,6 @@ function computeStats(allMatches, completedSessions) {
       }
     }
 
-    // Current streak (from end, skipping draws)
     let currentStreak = 0
     for (let i = allMatches.length - 1; i >= 0; i--) {
       const m = allMatches[i]
@@ -127,7 +118,6 @@ function computeStats(allMatches, completedSessions) {
       else if (m.caller === p) break
     }
 
-    // Session win streaks
     let longestSessionStreak = 0, currentSessionStreak = 0, tempSStreak = 0
     for (const s of completedSessions) {
       if (s.winner === p) { tempSStreak++; longestSessionStreak = Math.max(longestSessionStreak, tempSStreak) }
@@ -185,23 +175,14 @@ function computeStats(allMatches, completedSessions) {
     ? { player: 'andre', value: playerStats.andre.worstMatch }
     : { player: 'cami', value: playerStats.cami.worstMatch }
 
-  // Match wins: call win OR empty hand
-  const matchWins = {
-    andre: allMatches.filter(m =>
-      (m.caller === 'andre' && m.andre_final === 0 && !isDraw(m)) ||
-      m.caller === 'empty_andre'
-    ).length,
-    cami: allMatches.filter(m =>
-      (m.caller === 'cami' && m.cami_final === 0 && !isDraw(m)) ||
-      m.caller === 'empty_cami'
-    ).length,
-  }
-
   return {
     totalMatches: total,
     totalDraws,
     totalSessions: completedSessions.length,
-    matchWins,
+    matchWins: {
+      andre: allMatches.filter(isAndreWin).length,
+      cami:  allMatches.filter(isCamiWin).length,
+    },
     sessionWins: {
       andre: completedSessions.filter(s => s.winner === 'andre').length,
       cami:  completedSessions.filter(s => s.winner === 'cami').length,
