@@ -204,7 +204,7 @@ export default function Session({ sessionData, allData, onSessionChange }) {
                   <div style={{ fontSize: 12, fontWeight: 500, color: `var(--${p})` }}>{p === 'andre' ? 'Andre' : 'Cami'}</div>
                   <input
                     type="number" value={val} onChange={e => set(e.target.value)}
-                    min="0" inputMode="numeric"
+                    inputMode="numeric"
                     style={{
                       background: 'var(--surface2)', border: '0.5px solid var(--border)', borderRadius: 6,
                       color: 'var(--text)', fontFamily: 'Archivo Black, sans-serif', fontSize: 28,
@@ -263,7 +263,7 @@ export default function Session({ sessionData, allData, onSessionChange }) {
                   </div>
                   <input
                     type="number" value={val} onChange={e => set(e.target.value)}
-                    min="0" inputMode="numeric" autoFocus
+                    inputMode="numeric" autoFocus
                     style={{
                       background: 'var(--surface2)', border: '0.5px solid var(--border)', borderRadius: 6,
                       color: 'var(--text)', fontFamily: 'Archivo Black, sans-serif', fontSize: 28,
