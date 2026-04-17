@@ -2,10 +2,14 @@
  * Compute final scores for a match given who called and raw card values.
  * Lower is better. Caller wins if their raw <= opponent raw.
  * Winner gets 0. Loser gets raw + 10. Non-caller always gets their raw.
+ * If both players have equal raw values, it's a draw — both get 0.
  */
 export function computeScores({ caller, andreRaw, camiRaw }) {
   const isDraw = andreRaw === camiRaw
   if (isDraw) return { andreFinal: 0, camiFinal: 0, winner: null }
+
+  const callerWins =
+    caller === 'andre' ? andreRaw < camiRaw : camiRaw < andreRaw
 
   if (caller === 'andre') {
     return {
@@ -26,14 +30,14 @@ export function computeScores({ caller, andreRaw, camiRaw }) {
  * Compute final scores for an empty hand match.
  * The player who emptied their hand gets -10.
  * The opponent gets their raw card value.
- * No call/knock involved â€” emptying hand ends the match automatically.
+ * No call/knock involved — emptying hand ends the match automatically.
  */
 export function computeEmptyHandScores({ emptyPlayer, andreRaw, camiRaw }) {
   if (emptyPlayer === 'andre') {
     return {
       andreFinal: -10,
       camiFinal: camiRaw,
-      winner: 'andre', // going out is always good for you
+      winner: 'andre',
     }
   } else {
     return {
@@ -51,7 +55,7 @@ export function computeEmptyHandScores({ emptyPlayer, andreRaw, camiRaw }) {
 export function computeSessionWinner(matches) {
   const andreTotal = matches.reduce((s, m) => s + m.andre_final, 0)
   const camiTotal  = matches.reduce((s, m) => s + m.cami_final, 0)
-  if (andreTotal === camiTotal) return null // tie â€” shouldn't happen per rules but handled
+  if (andreTotal === camiTotal) return null
   return andreTotal < camiTotal ? 'andre' : 'cami'
 }
 
