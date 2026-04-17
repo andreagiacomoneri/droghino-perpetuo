@@ -85,9 +85,10 @@ export default function Session({ sessionData, allData, onSessionChange }) {
   const target = activeSession?.target_score
 
   function scoreColor(final, raw, isOut) {
-    if (isOut || final < 0) return 'var(--green)'
+    if (isOut) return 'var(--green)'
+    if (final < 0) return 'var(--green)'  // negative = win (kept negative score)
     if (final === 0) return 'var(--green)'
-    if (final > raw) return 'var(--red)'
+    if (final > raw) return 'var(--red)'  // penalty
     return 'var(--text)'
   }
 
@@ -204,7 +205,7 @@ export default function Session({ sessionData, allData, onSessionChange }) {
                   <div style={{ fontSize: 12, fontWeight: 500, color: `var(--${p})` }}>{p === 'andre' ? 'Andre' : 'Cami'}</div>
                   <input
                     type="number" value={val} onChange={e => set(e.target.value)}
-                    inputMode="numeric"
+                    min="0" inputMode="numeric"
                     style={{
                       background: 'var(--surface2)', border: '0.5px solid var(--border)', borderRadius: 6,
                       color: 'var(--text)', fontFamily: 'Archivo Black, sans-serif', fontSize: 28,
@@ -263,7 +264,7 @@ export default function Session({ sessionData, allData, onSessionChange }) {
                   </div>
                   <input
                     type="number" value={val} onChange={e => set(e.target.value)}
-                    inputMode="numeric" autoFocus
+                    min="0" inputMode="numeric" autoFocus
                     style={{
                       background: 'var(--surface2)', border: '0.5px solid var(--border)', borderRadius: 6,
                       color: 'var(--text)', fontFamily: 'Archivo Black, sans-serif', fontSize: 28,
