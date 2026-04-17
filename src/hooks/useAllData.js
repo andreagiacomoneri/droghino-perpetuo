@@ -9,6 +9,9 @@ function matchWinner(m) {
   if (isDraw(m)) return 'draw'
   if (m.caller === 'empty_andre') return 'andre'
   if (m.caller === 'empty_cami') return 'cami'
+  // Negative final for caller = call win with negative score
+  if (m.caller === 'andre' && m.andre_final < 0) return 'andre'
+  if (m.caller === 'cami'  && m.cami_final  < 0) return 'cami'
   if (m.andre_final < m.cami_final) return 'andre'
   if (m.cami_final < m.andre_final) return 'cami'
   return 'draw'
@@ -95,7 +98,7 @@ function computeStats(allMatches, completedSessions) {
 
   for (const p of players) {
     const calls = allMatches.filter(m => m.caller === p)
-    const callWins = calls.filter(m => m[`${p}_final`] === 0 && !isDraw(m))
+    const callWins = calls.filter(m => m[`${p}_final`] <= 0 && !isDraw(m))
     const penalties = calls.filter(m => m[`${p}_final`] > m[`${p}_raw`])
 
     let longestStreak = 0, tempStreak = 0
