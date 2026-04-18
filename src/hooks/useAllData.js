@@ -28,7 +28,7 @@ export function useAllData() {
     setLoading(true)
     const [{ data: sessionsData }, { data: matchesData }] = await Promise.all([
       supabase.from('sessions').select('*').order('created_at', { ascending: true }),
-      supabase.from('matches').select('*').order('match_number', { ascending: true }),
+      supabase.from('matches').select('*').order('created_at', { ascending: true }).order('match_number', { ascending: true }),
     ])
     setSessions(sessionsData || [])
     setAllMatches(matchesData || [])
