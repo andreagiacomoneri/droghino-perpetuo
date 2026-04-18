@@ -9,9 +9,8 @@ function matchWinner(m) {
   if (isDraw(m)) return 'draw'
   if (m.caller === 'empty_andre') return 'andre'
   if (m.caller === 'empty_cami') return 'cami'
-  // Negative final for caller = call win with negative score
   if (m.caller === 'andre' && m.andre_final < 0) return 'andre'
-  if (m.caller === 'cami'  && m.cami_final  < 0) return 'cami'
+  if (m.caller === 'cami' && m.cami_final < 0) return 'cami'
   if (m.andre_final < m.cami_final) return 'andre'
   if (m.cami_final < m.andre_final) return 'cami'
   return 'draw'
@@ -70,6 +69,35 @@ export function useAllData() {
     )
   }
 
+  // Drift data: gap = cami_cumulative - andre_cumulative (positive = Cami ahead)
+  function getDriftData(sessionId) {
+    const matches = sessionId
+      ? allMatches.filter(m => m.session_id === sessionId)
+      : allMatches
+    let andreAcc = 0, camiAcc = 0
+    const pts = [0]
+    for (const m of matches) {
+      andreAcc += m.andre_final
+      camiAcc += m.cami_final
+      pts.push(camiAcc - andreAcc)
+    }
+    return pts
+  }
+
+  function getDriftBySession() {
+    let andreAcc = 0, camiAcc = 0
+    const pts = [0]
+    const labels = ['']
+    for (const s of completedSessions) {
+      const sm = allMatches.filter(m => m.session_id === s.id)
+      andreAcc += sm.reduce((a, m) => a + m.andre_final, 0)
+      camiAcc  += sm.reduce((a, m) => a + m.cami_final, 0)
+      pts.push(camiAcc - andreAcc)
+      labels.push(new Date(s.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }))
+    }
+    return { pts, labels }
+  }
+
   const stats = computeStats(allMatches, completedSessions)
 
   return {
@@ -82,6 +110,8 @@ export function useAllData() {
     loading,
     getMatchesForSession,
     getWarScoreAtSessionStart,
+    getDriftData,
+    getDriftBySession,
     stats,
     refetch: fetchAll,
   }
@@ -97,19 +127,17 @@ function computeStats(allMatches, completedSessions) {
   const playerStats = {}
 
   for (const p of players) {
-    const calls = allMatches.filter(m => m.caller === p)
-    const callWins = calls.filter(m => m[`${p}_final`] <= 0 && !isDraw(m))
-    const penalties = calls.filter(m => m[`${p}_final`] > m[`${p}_raw`])
+    // Call = knock OR empty hand by this player
+    const calls = allMatches.filter(m => m.caller === p || m.caller === `empty_${p}`)
+    const regularCalls = allMatches.filter(m => m.caller === p)
+    const callWins = regularCalls.filter(m => m[`${p}_final`] <= 0 && !isDraw(m))
+    const penalties = regularCalls.filter(m => m[`${p}_final`] > m[`${p}_raw`])
 
     let longestStreak = 0, tempStreak = 0
     for (const m of allMatches) {
       if (isDraw(m)) continue
-      if (matchWinner(m) === p) {
-        tempStreak++
-        longestStreak = Math.max(longestStreak, tempStreak)
-      } else {
-        tempStreak = 0
-      }
+      if (matchWinner(m) === p) { tempStreak++; longestStreak = Math.max(longestStreak, tempStreak) }
+      else tempStreak = 0
     }
 
     let currentStreak = 0
@@ -145,10 +173,10 @@ function computeStats(allMatches, completedSessions) {
 
     playerStats[p] = {
       totalCalls: calls.length,
-      callWinRate: calls.length ? Math.round((callWins.length / calls.length) * 100) : 0,
+      callWinRate: regularCalls.length ? Math.round((callWins.length / regularCalls.length) * 100) : 0,
       callWinCount: callWins.length,
       callRate: total ? Math.round((calls.length / total) * 100) : 0,
-      penaltyRate: calls.length ? Math.round((penalties.length / calls.length) * 100) : 0,
+      penaltyRate: regularCalls.length ? Math.round((penalties.length / regularCalls.length) * 100) : 0,
       penaltyCount: penalties.length,
       currentCallStreak: currentStreak,
       longestCallStreak: longestStreak,
@@ -169,9 +197,63 @@ function computeStats(allMatches, completedSessions) {
     ? { player: 'andre', value: playerStats.andre.longestCallStreak }
     : { player: 'cami', value: playerStats.cami.longestCallStreak }
 
-  const worstLoss = playerStats.andre.worstMatch >= playerStats.cami.worstMatch
-    ? { player: 'andre', value: playerStats.andre.worstMatch }
-    : { player: 'cami', value: playerStats.cami.worstMatch }
+  // Most brutal loss: highest final score in a single match
+  let worstLoss = { player: 'andre', value: 0, matchNum: null, sessionDate: null }
+  for (const m of allMatches) {
+    const s = completedSessions.find(s => s.id === m.session_id)
+    const date = s ? new Date(s.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : ''
+    if (m.andre_final > worstLoss.value) worstLoss = { player: 'andre', value: m.andre_final, matchNum: m.match_number, sessionDate: date }
+    if (m.cami_final > worstLoss.value) worstLoss = { player: 'cami', value: m.cami_final, matchNum: m.match_number, sessionDate: date }
+  }
+
+  // Longest session
+  let longestSession = { value: 0, sessionDate: null }
+  for (const s of completedSessions) {
+    const count = allMatches.filter(m => m.session_id === s.id).length
+    if (count > longestSession.value) {
+      longestSession = {
+        value: count,
+        sessionDate: new Date(s.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+      }
+    }
+  }
+
+  // Biggest comeback: largest gap closed within a session (regardless of winner)
+  let biggestComeback = { player: null, value: 0, sessionDate: null }
+  for (const s of completedSessions) {
+    const sm = allMatches.filter(m => m.session_id === s.id)
+    let andreAcc = 0, camiAcc = 0
+    let maxAndreDeficit = 0, maxCamiDeficit = 0
+    let maxAndreDeficitIdx = 0, maxCamiDeficitIdx = 0
+    const andreScores = [0], camiScores = [0]
+    for (const m of sm) {
+      andreAcc += m.andre_final; camiAcc += m.cami_final
+      andreScores.push(andreAcc); camiScores.push(camiAcc)
+    }
+    // For each point, find the max deficit Andre had before and how much he closed
+    for (let i = 0; i < andreScores.length; i++) {
+      const gap = andreScores[i] - camiScores[i] // positive = Andre behind (higher is worse)
+      if (gap > maxAndreDeficit) { maxAndreDeficit = gap; maxAndreDeficitIdx = i }
+    }
+    const andreClose = maxAndreDeficit - (andreScores[andreScores.length-1] - camiScores[camiScores.length-1])
+    if (andreClose > biggestComeback.value) {
+      biggestComeback = { player: 'andre', value: Math.round(andreClose), sessionDate: new Date(s.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) }
+    }
+    for (let i = 0; i < camiScores.length; i++) {
+      const gap = camiScores[i] - andreScores[i]
+      if (gap > maxCamiDeficit) { maxCamiDeficit = gap; maxCamiDeficitIdx = i }
+    }
+    const camiClose = maxCamiDeficit - (camiScores[camiScores.length-1] - andreScores[andreScores.length-1])
+    if (camiClose > biggestComeback.value) {
+      biggestComeback = { player: 'cami', value: Math.round(camiClose), sessionDate: new Date(s.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) }
+    }
+  }
+
+  // Call rate (including empty hands)
+  const andreCalls = playerStats.andre.totalCalls
+  const camiCalls = playerStats.cami.totalCalls
+  const callRateAndre = total ? Math.round((andreCalls / total) * 100) : 0
+  const callRateCami = 100 - callRateAndre
 
   return {
     totalMatches: total,
@@ -189,6 +271,12 @@ function computeStats(allMatches, completedSessions) {
     },
     bestStreak,
     worstLoss,
+    longestSession,
+    biggestComeback,
+    callRateAndre,
+    callRateCami,
+    andreTotalCalls: andreCalls,
+    camiTotalCalls: camiCalls,
     players: playerStats,
   }
 }
