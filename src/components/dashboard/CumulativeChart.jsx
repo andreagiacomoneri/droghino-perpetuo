@@ -83,8 +83,10 @@ export default function CumulativeChart({ allData }) {
   function handleMouseMove(e) {
     const rect = areaRef.current.getBoundingClientRect()
     const xRel = e.clientX - rect.left
-    const chartLeft = (PL / W) * rect.width
-    const chartRight = ((W - PR) / W) * rect.width
+    // Scale PL and PR to actual rendered width (SVG uses viewBox W=320 but renders at rect.width)
+    const scale = rect.width / W
+    const chartLeft = PL * scale
+    const chartRight = (W - PR) * scale
     if (xRel < chartLeft || xRel > chartRight) { setTooltip(null); return }
     const frac = (xRel - chartLeft) / (chartRight - chartLeft)
     const i = Math.min(n - 1, Math.max(0, Math.round(frac * (n - 1))))
