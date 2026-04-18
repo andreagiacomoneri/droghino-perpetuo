@@ -193,9 +193,23 @@ function computeStats(allMatches, completedSessions) {
     }
   }
 
-  const bestStreak = playerStats.andre.longestCallStreak >= playerStats.cami.longestCallStreak
-    ? { player: 'andre', value: playerStats.andre.longestCallStreak }
-    : { player: 'cami', value: playerStats.cami.longestCallStreak }
+  // Best win streak with session tracking
+  let bestStreak = { player: 'andre', value: 0, sessionDate: null }
+  for (const p of ['andre', 'cami']) {
+    let tempStreak = 0, streakStart = null
+    for (const m of allMatches) {
+      if (isDraw(m)) continue
+      const s = completedSessions.find(s => s.id === m.session_id)
+      const date = s ? new Date(s.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : null
+      if (matchWinner(m) === p) {
+        if (tempStreak === 0) streakStart = date
+        tempStreak++
+        if (tempStreak > bestStreak.value) bestStreak = { player: p, value: tempStreak, sessionDate: streakStart }
+      } else {
+        tempStreak = 0; streakStart = null
+      }
+    }
+  }
 
   // Most brutal loss: highest final score in a single match
   let worstLoss = { player: 'andre', value: 0, matchNum: null, sessionDate: null }
