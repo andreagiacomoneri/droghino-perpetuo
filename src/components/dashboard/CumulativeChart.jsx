@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef } from 'react'
 
 const W = 320, H = 150, PL = 36, PR = 12, PT = 8, PB = 24
 
@@ -7,7 +7,7 @@ export default function CumulativeChart({ allData }) {
   const completedSessions = sessions.filter(s => s.status === 'completed')
 
   const [view, setView] = useState('overall')
-  const [pillOn, setPillOn] = useState(true) // overall: true=by match, session: true=zero origin
+  const [pillOn, setPillOn] = useState(true)
   const [tooltip, setTooltip] = useState(null)
   const areaRef = useRef()
 
@@ -16,6 +16,7 @@ export default function CumulativeChart({ allData }) {
   function onViewChange(e) {
     setView(e.target.value)
     setPillOn(e.target.value === 'overall' ? true : false)
+    setTooltip(null)
   }
 
   function toggleLabel() {
@@ -26,7 +27,6 @@ export default function CumulativeChart({ allData }) {
   function getData() {
     if (isOverall) {
       if (pillOn) {
-        // by match
         let andreAcc = 0, camiAcc = 0
         const andre = [0], cami = [0]
         for (const m of allMatches) {
@@ -35,7 +35,6 @@ export default function CumulativeChart({ allData }) {
         }
         return { andre, cami, labels: null }
       } else {
-        // by session
         let andreAcc = 0, camiAcc = 0
         const andre = [0], cami = [0]
         const labels = ['Start']
@@ -80,24 +79,35 @@ export default function CumulativeChart({ allData }) {
     return arr.map((v, i) => `${cx(i)},${cy(v)}`).join(' ')
   }
 
-  function handleMouseMove(e) {
+  function getIndexFromMouseX(clientX) {
     const rect = areaRef.current.getBoundingClientRect()
-    const xRel = e.clientX - rect.left
-    // Scale PL and PR to actual rendered width (SVG uses viewBox W=320 but renders at rect.width)
+    const xRel = clientX - rect.left
     const scale = rect.width / W
     const chartLeft = PL * scale
     const chartRight = (W - PR) * scale
-    if (xRel < chartLeft || xRel > chartRight) { setTooltip(null); return }
+    if (xRel < chartLeft || xRel > chartRight) return null
     const frac = (xRel - chartLeft) / (chartRight - chartLeft)
-    const i = Math.min(n - 1, Math.max(0, Math.round(frac * (n - 1))))
-    setTooltip({ i, x: xRel, y: e.clientY - rect.top })
+    return Math.min(n - 1, Math.max(0, Math.round(frac * (n - 1))))
+  }
+
+  function handleMouseMove(e) {
+    const i = getIndexFromMouseX(e.clientX)
+    if (i === null) { setTooltip(null); return }
+    const rect = areaRef.current.getBoundingClientRect()
+    setTooltip({
+      i,
+      andreVal: d.andre[i],
+      camiVal: d.cami[i],
+      label: d.labels ? d.labels[i] : null,
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top,
+    })
   }
 
   const gridSteps = 4
   const gridLines = Array.from({ length: gridSteps + 1 }, (_, i) => {
     const v = minV + (range * i / gridSteps)
-    const y = cy(v)
-    return { v: Math.round(v), y }
+    return { v: Math.round(v), y: cy(v) }
   })
 
   const xLabelIdxs = n <= 6
@@ -106,7 +116,6 @@ export default function CumulativeChart({ allData }) {
 
   return (
     <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-      {/* Controls */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
         <select
           value={view}
@@ -130,7 +139,7 @@ export default function CumulativeChart({ allData }) {
 
       <div
         style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', userSelect: 'none' }}
-        onClick={() => setPillOn(p => !p)}
+        onClick={() => { setPillOn(p => !p); setTooltip(null) }}
       >
         <div className={`pill-track${pillOn ? ' on' : ''}`}>
           <div className="pill-thumb" />
@@ -138,7 +147,6 @@ export default function CumulativeChart({ allData }) {
         <span style={{ fontSize: 13, color: 'var(--text)' }}>{toggleLabel()}</span>
       </div>
 
-      {/* Chart */}
       <div
         ref={areaRef}
         style={{ position: 'relative', height: H }}
@@ -146,7 +154,6 @@ export default function CumulativeChart({ allData }) {
         onMouseLeave={() => setTooltip(null)}
       >
         <svg viewBox={`0 0 ${W} ${H}`} style={{ width: '100%', height: '100%', overflow: 'visible' }}>
-          {/* Grid */}
           {gridLines.map(({ v, y }) => (
             <g key={v}>
               <line x1={PL} y1={y} x2={W - PR} y2={y} stroke="rgba(255,255,255,0.05)" strokeWidth="0.5" />
@@ -154,28 +161,24 @@ export default function CumulativeChart({ allData }) {
             </g>
           ))}
 
-          {/* X labels */}
           {xLabelIdxs.map(i => d.labels && (
             <text key={i} x={cx(i)} y={H - 4} textAnchor="middle" fontSize={10} fill="#5F5E5A">
               {d.labels[i]}
             </text>
           ))}
 
-          {/* Lines */}
           <polyline points={buildPath(d.andre)} fill="none" stroke="#378ADD" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
           <polyline points={buildPath(d.cami)}  fill="none" stroke="#EF9F27" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
 
-          {/* End dots */}
           <circle cx={cx(n - 1)} cy={cy(d.andre[n - 1])} r="3.5" fill="#378ADD" />
           <circle cx={cx(n - 1)} cy={cy(d.cami[n - 1])}  r="3.5" fill="#EF9F27" />
 
-          {/* Tooltip line */}
           {tooltip && (
-            <line x1={cx(tooltip.i)} y1={PT} x2={cx(tooltip.i)} y2={H - PB} stroke="rgba(255,255,255,0.1)" strokeWidth="1" strokeDasharray="3,3" />
+            <line x1={cx(tooltip.i)} y1={PT} x2={cx(tooltip.i)} y2={H - PB}
+              stroke="rgba(255,255,255,0.1)" strokeWidth="1" strokeDasharray="3,3" />
           )}
         </svg>
 
-        {/* Tooltip */}
         {tooltip && (
           <div style={{
             position: 'absolute',
@@ -184,14 +187,13 @@ export default function CumulativeChart({ allData }) {
             background: 'var(--surface2)', border: '0.5px solid var(--border2)',
             borderRadius: 6, padding: '7px 10px', fontSize: 11, pointerEvents: 'none', whiteSpace: 'nowrap',
           }}>
-            {d.labels && <div style={{ fontSize: 10, color: 'var(--text-dim)', marginBottom: 3 }}>{d.labels[tooltip.i]}</div>}
-            <div style={{ color: '#378ADD', fontWeight: 500 }}>Andre: {d.andre[tooltip.i]}</div>
-            <div style={{ color: '#EF9F27', fontWeight: 500 }}>Cami: {d.cami[tooltip.i]}</div>
+            {tooltip.label && <div style={{ fontSize: 10, color: 'var(--text-dim)', marginBottom: 3 }}>{tooltip.label}</div>}
+            <div style={{ color: '#378ADD', fontWeight: 500 }}>Andre: {tooltip.andreVal}</div>
+            <div style={{ color: '#EF9F27', fontWeight: 500 }}>Cami: {tooltip.camiVal}</div>
           </div>
         )}
       </div>
 
-      {/* Legend */}
       <div style={{ display: 'flex', gap: 16 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--text-muted)' }}>
           <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#378ADD', flexShrink: 0 }} />Andre
