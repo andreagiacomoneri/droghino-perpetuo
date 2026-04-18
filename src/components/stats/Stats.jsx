@@ -286,15 +286,16 @@ function GameStats({ stats, allData }) {
         <div className="card-sm" style={{ aspectRatio: '1/1', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
           <div style={{ fontSize: 13, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.8px', fontWeight: 500, lineHeight: 1.3 }}>Best win<br/>streak</div>
           <div>
-            <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 52, lineHeight: 1, letterSpacing: -2, color: `var(--${stats.bestStreak.player})` }}>{stats.bestStreak.value}</div>
+            <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 64, lineHeight: 1, letterSpacing: -3, color: `var(--${stats.bestStreak.player})` }}>{stats.bestStreak.value}</div>
             <div style={{ fontSize: 11, color: 'var(--text-dim)' }}>matches in a row</div>
+            {stats.bestStreak.sessionDate && <div style={{ fontSize: 10, color: 'var(--text-dim)', marginTop: 2 }}>{stats.bestStreak.sessionDate}</div>}
           </div>
         </div>
 
         <div className="card-sm" style={{ aspectRatio: '1/1', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
           <div style={{ fontSize: 13, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.8px', fontWeight: 500, lineHeight: 1.3 }}>Most brutal<br/>loss</div>
           <div>
-            <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 52, lineHeight: 1, letterSpacing: -2, color: `var(--${stats.worstLoss.player})` }}>{stats.worstLoss.value}</div>
+            <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 64, lineHeight: 1, letterSpacing: -3, color: `var(--${stats.worstLoss.player})` }}>{stats.worstLoss.value}</div>
             <div style={{ fontSize: 11, color: 'var(--text-dim)' }}>pts in one match</div>
             {stats.worstLoss.sessionDate && <div style={{ fontSize: 10, color: 'var(--text-dim)', marginTop: 2 }}>Match #{stats.worstLoss.matchNum} · {stats.worstLoss.sessionDate}</div>}
           </div>
@@ -303,7 +304,7 @@ function GameStats({ stats, allData }) {
         <div className="card-sm" style={{ aspectRatio: '1/1', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
           <div style={{ fontSize: 13, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.8px', fontWeight: 500, lineHeight: 1.3 }}>Longest<br/>session</div>
           <div>
-            <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 52, lineHeight: 1, letterSpacing: -2, color: 'var(--text)' }}>{stats.longestSession.value}</div>
+            <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 64, lineHeight: 1, letterSpacing: -3, color: 'var(--text)' }}>{stats.longestSession.value}</div>
             <div style={{ fontSize: 11, color: 'var(--text-dim)' }}>matches played</div>
             {stats.longestSession.sessionDate && <div style={{ fontSize: 10, color: 'var(--text-dim)', marginTop: 2 }}>{stats.longestSession.sessionDate}</div>}
           </div>
@@ -312,7 +313,7 @@ function GameStats({ stats, allData }) {
         <div className="card-sm" style={{ aspectRatio: '1/1', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
           <div style={{ fontSize: 13, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.8px', fontWeight: 500, lineHeight: 1.3 }}>Biggest<br/>comeback</div>
           <div>
-            <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 52, lineHeight: 1, letterSpacing: -2, color: stats.biggestComeback.player ? `var(--${stats.biggestComeback.player})` : 'var(--text)' }}>{stats.biggestComeback.value}</div>
+            <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 64, lineHeight: 1, letterSpacing: -3, color: stats.biggestComeback.player ? `var(--${stats.biggestComeback.player})` : 'var(--text)' }}>{stats.biggestComeback.value}</div>
             <div style={{ fontSize: 11, color: 'var(--text-dim)' }}>pts gap closed</div>
             {stats.biggestComeback.sessionDate && <div style={{ fontSize: 10, color: 'var(--text-dim)', marginTop: 2 }}>{stats.biggestComeback.sessionDate}</div>}
           </div>
