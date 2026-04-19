@@ -85,14 +85,14 @@ function GameStats({ stats, allData }) {
       out += `<line x1="${PL}" y1="${y}" x2="${DRIFT_W - PR}" y2="${y}" stroke="${isZ ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.05)'}" stroke-width="${isZ ? 1 : 0.5}"/>`
       if (v !== 0) out += `<text x="${PL - 5}" y="${y + 3.5}" text-anchor="end" font-size="9" fill="#5F5E5A">${Math.abs(v)}</text>`
     }
-    out += `<text x="${PL - 5}" y="${PT - 5}" text-anchor="end" font-size="9" font-weight="500" fill="#EF9F27">Cami</text>`
-    out += `<text x="${PL - 5}" y="${DRIFT_H - PB + 13}" text-anchor="end" font-size="9" font-weight="500" fill="#378ADD">Andre</text>`
+    out += `<text x="${PL - 5}" y="${PT - 5}" text-anchor="end" font-size="9" font-weight="500" fill="#378ADD">Cami</text>`
+    out += `<text x="${PL - 5}" y="${DRIFT_H - PB + 13}" text-anchor="end" font-size="9" font-weight="500" fill="#EF9F27">Andre</text>`
     out += `<text x="${PL - 5}" y="${zero + 3.5}" text-anchor="end" font-size="9" fill="rgba(255,255,255,0.25)">0</text>`
 
     for (let i = 0; i < driftN - 1; i++) {
       const x1 = cx(i), y1 = cy(driftPts[i]), x2 = cx(i + 1), y2 = cy(driftPts[i + 1])
-      const c1 = driftPts[i] > 0 ? '#EF9F27' : driftPts[i] < 0 ? '#378ADD' : 'rgba(255,255,255,0.3)'
-      const c2 = driftPts[i + 1] > 0 ? '#EF9F27' : driftPts[i + 1] < 0 ? '#378ADD' : 'rgba(255,255,255,0.3)'
+      const c1 = driftPts[i] > 0 ? '#378ADD' : driftPts[i] < 0 ? '#EF9F27' : 'rgba(255,255,255,0.3)'
+      const c2 = driftPts[i + 1] > 0 ? '#378ADD' : driftPts[i + 1] < 0 ? '#EF9F27' : 'rgba(255,255,255,0.3)'
       if (c1 === c2) {
         out += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${c1}" stroke-width="2" stroke-linecap="round"/>`
       } else {
@@ -104,14 +104,26 @@ function GameStats({ stats, allData }) {
     }
 
     if (driftData.labels) {
-      const labelStep = driftN <= 6 ? 1 : Math.ceil(driftN / 5)
+      // by session: every point has a label → show all
+      // by match: show every 5th match + last
+      const isMatchMode = !driftData.labels.some(l => l && l.includes(' '))
       driftData.labels.forEach((l, i) => {
-        if ((i % labelStep === 0 || i === driftN - 1) && l)
+        if (!l) return
+        const show = isMatchMode
+          ? (i % 5 === 0 || i === driftN - 1)
+          : true
+        if (show)
           out += `<text x="${cx(i)}" y="${DRIFT_H - 4}" text-anchor="middle" font-size="9" fill="#5F5E5A">${l}</text>`
       })
+    } else {
+      // no labels = overall by match mode
+      for (let i = 0; i < driftN; i++) {
+        if (i % 5 === 0 || i === driftN - 1)
+          out += `<text x="${cx(i)}" y="${DRIFT_H - 4}" text-anchor="middle" font-size="9" fill="#5F5E5A">${i}</text>`
+      }
     }
 
-    const endCol = driftPts[driftN - 1] > 0 ? '#EF9F27' : driftPts[driftN - 1] < 0 ? '#378ADD' : 'rgba(255,255,255,0.3)'
+    const endCol = driftPts[driftN - 1] > 0 ? '#378ADD' : driftPts[driftN - 1] < 0 ? '#EF9F27' : 'rgba(255,255,255,0.3)'
     out += `<circle cx="${cx(driftN - 1)}" cy="${cy(driftPts[driftN - 1])}" r="3" fill="${endCol}"/>`
     return out
   }
@@ -125,8 +137,8 @@ function GameStats({ stats, allData }) {
     const frac = (xRel - cl) / (cr - cl)
     const i = Math.min(driftN - 1, Math.max(0, Math.round(frac * (driftN - 1))))
     const val = driftPts[i]
-    const col = val > 0 ? '#EF9F27' : val < 0 ? '#378ADD' : 'rgba(255,255,255,0.5)'
-    const who = val > 0 ? `Cami +${val}` : val < 0 ? `Andre +${Math.abs(val)}` : 'Even'
+    const col = val > 0 ? '#378ADD' : val < 0 ? '#EF9F27' : 'rgba(255,255,255,0.5)'
+    const who = val > 0 ? `Cami +${Math.abs(val)}` : val < 0 ? `Andre +${Math.abs(val)}` : 'Even'
     setDriftTooltip({ text: who, col, x: e.clientX - rect.left, y: e.clientY - rect.top })
   }
 
