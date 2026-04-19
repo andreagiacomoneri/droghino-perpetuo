@@ -79,7 +79,7 @@ export function useAllData() {
     for (const m of matches) {
       andreAcc += m.andre_final
       camiAcc += m.cami_final
-      pts.push(camiAcc - andreAcc)
+      pts.push(andreAcc - camiAcc)
     }
     return pts
   }
@@ -92,7 +92,7 @@ export function useAllData() {
       const sm = allMatches.filter(m => m.session_id === s.id)
       andreAcc += sm.reduce((a, m) => a + m.andre_final, 0)
       camiAcc  += sm.reduce((a, m) => a + m.cami_final, 0)
-      pts.push(camiAcc - andreAcc)
+      pts.push(andreAcc - camiAcc)
       labels.push(new Date(s.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }))
     }
     return { pts, labels }
